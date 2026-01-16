@@ -1,0 +1,5 @@
+{
+  "api_url": "/api",
+  "auth_method": "token",
+  "enabled": true
+}

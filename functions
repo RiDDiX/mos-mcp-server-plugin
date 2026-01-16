@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Import MOS functions
+. /usr/local/lib/functions/mos-common
+
+# Set variables for plugin
+PLG_NAME="mcp-server"
+DISPLAY_NAME="MCP Server"
+PLG_DIR="/boot/optional/plugins/$PLG_NAME"
+MCP_INSTALL_DIR="/opt/mos-mcp-server"
+MCP_SERVICE="mos-mcp-server"
+
+# Install function - called after .deb installation
+install() {
+  echo "Installing MCP Server..."
+  
+  # Create installation directory
+  mkdir -p "$MCP_INSTALL_DIR"
+  
+  # Copy MCP server files from plugin directory
+  if [ -d "$PLG_DIR/staticfiles" ]; then
+    cp -r "$PLG_DIR/staticfiles/"* "$MCP_INSTALL_DIR/"
+  fi
+  
+  # Install npm dependencies if package.json exists
+  if [ -f "$MCP_INSTALL_DIR/package.json" ]; then
+    cd "$MCP_INSTALL_DIR"
+    npm install --production 2>/dev/null || true
+  fi
+  
+  # Create systemd service
+  cat > /etc/systemd/system/${MCP_SERVICE}.service << 'EOF'
+[Unit]
+Description=MOS MCP Server
+After=network.target mos-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mos-mcp-server
+ExecStart=/usr/bin/node /opt/mos-mcp-server/src/index.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=MOS_API_URL=/api
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Reload systemd and enable service
+  systemctl daemon-reload
+  systemctl enable ${MCP_SERVICE}.service
+  systemctl start ${MCP_SERVICE}.service
+  
+  echo "MCP Server installed successfully"
+}
+
+# Uninstall function - called before package removal
+uninstall() {
+  echo "Uninstalling MCP Server..."
+  
+  # Stop and disable service
+  systemctl stop ${MCP_SERVICE}.service 2>/dev/null || true
+  systemctl disable ${MCP_SERVICE}.service 2>/dev/null || true
+  
+  # Remove systemd service file
+  rm -f /etc/systemd/system/${MCP_SERVICE}.service
+  systemctl daemon-reload
+  
+  # Remove installation directory
+  rm -rf "$MCP_INSTALL_DIR"
+  
+  echo "MCP Server uninstalled successfully"
+}
+
+# Start function
+start() {
+  systemctl start ${MCP_SERVICE}.service
+}
+
+# Stop function
+stop() {
+  systemctl stop ${MCP_SERVICE}.service
+}
+
+# Restart function
+restart() {
+  systemctl restart ${MCP_SERVICE}.service
+}
+
+# Status function
+status() {
+  systemctl status ${MCP_SERVICE}.service
+}
