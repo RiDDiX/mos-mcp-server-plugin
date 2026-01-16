@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="120" fill="url(#shine)"/>
+  
+  <!-- MCP letters stylized -->
+  <g fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold">
+    <!-- M -->
+    <path d="M45 170V86h12l23 50 23-50h12v84h-12v-58l-18 40h-10l-18-40v58z"/>
+    
+    <!-- C -->
+    <path d="M130 170c-22 0-35-18-35-42s13-42 35-42c15 0 27 8 31 22h-14c-3-7-9-10-17-10-14 0-22 12-22 30s8 30 22 30c8 0 14-4 17-11h14c-4 14-16 23-31 23z"/>
+    
+    <!-- P -->
+    <path d="M175 170V86h30c18 0 28 10 28 26s-10 26-28 26h-17v32zm13-44h15c10 0 15-5 15-14s-5-14-15-14h-15z"/>
+  </g>
+  
+  <!-- Connection dots -->
+  <circle cx="50" cy="50" r="8" fill="#a5f3fc"/>
+  <circle cx="206" cy="50" r="8" fill="#a5f3fc"/>
+  <circle cx="50" cy="206" r="8" fill="#a5f3fc"/>
+  <circle cx="206" cy="206" r="8" fill="#a5f3fc"/>
+  
+  <!-- Connection lines -->
+  <line x1="50" y1="50" x2="128" y2="100" stroke="#a5f3fc" stroke-width="2" opacity="0.6"/>
+  <line x1="206" y1="50" x2="128" y2="100" stroke="#a5f3fc" stroke-width="2" opacity="0.6"/>
+  <line x1="50" y1="206" x2="128" y2="156" stroke="#a5f3fc" stroke-width="2" opacity="0.6"/>
+  <line x1="206" y1="206" x2="128" y2="156" stroke="#a5f3fc" stroke-width="2" opacity="0.6"/>
+</svg>

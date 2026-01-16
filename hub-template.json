@@ -5,7 +5,7 @@
   "repository": "https://github.com/RiDDiX/mos-mcp-server-plugin",
   "architecture": [ "amd64", "arm64" ],
   "driver": false,
-  "icon": "https://raw.githubusercontent.com/RiDDiX/mos-mcp-server-plugin/master/icon.png",
+  "icon": "https://raw.githubusercontent.com/RiDDiX/mos-mcp-server-plugin/master/icon.svg",
   "author": "RiDDiX",
   "homepage": "https://modelcontextprotocol.io/",
   "support": "https://github.com/RiDDiX/mos-mcp-server-plugin/issues",
