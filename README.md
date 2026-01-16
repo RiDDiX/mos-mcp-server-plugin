@@ -52,15 +52,15 @@ Add to your Claude Desktop configuration:
 
 ```bash
 # Start/Stop/Restart
-systemctl start mos-mcp-server
-systemctl stop mos-mcp-server
-systemctl restart mos-mcp-server
+/etc/init.d/mos-mcp-server start
+/etc/init.d/mos-mcp-server stop
+/etc/init.d/mos-mcp-server restart
 
 # Check status
-systemctl status mos-mcp-server
+/etc/init.d/mos-mcp-server status
 
 # View logs
-journalctl -u mos-mcp-server -f
+tail -f /var/log/mos-mcp-server.log
 ```
 
 ## Available Tools

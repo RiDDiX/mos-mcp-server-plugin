@@ -9,6 +9,9 @@ DISPLAY_NAME="MCP Server"
 PLG_DIR="/boot/optional/plugins/$PLG_NAME"
 MCP_INSTALL_DIR="/opt/mos-mcp-server"
 MCP_SERVICE="mos-mcp-server"
+INIT_SCRIPT="/etc/init.d/${MCP_SERVICE}"
+PIDFILE="/var/run/${MCP_SERVICE}.pid"
+LOGFILE="/var/log/${MCP_SERVICE}.log"
 
 # Install function - called after .deb installation
 install() {
@@ -28,29 +31,72 @@ install() {
     npm install --production 2>/dev/null || true
   fi
   
-  # Create systemd service
-  cat > /etc/systemd/system/${MCP_SERVICE}.service << 'EOF'
-[Unit]
-Description=MOS MCP Server
-After=network.target mos-api.service
+  # Create init.d script (sysvinit for Devuan)
+  cat > "$INIT_SCRIPT" << 'EOF'
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          mos-mcp-server
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: MOS MCP Server
+# Description:       Model Context Protocol server for MOS
+### END INIT INFO
 
-[Service]
-Type=simple
-WorkingDirectory=/opt/mos-mcp-server
-ExecStart=/usr/bin/node /opt/mos-mcp-server/src/index.js
-Restart=on-failure
-RestartSec=5
-Environment=NODE_ENV=production
-Environment=MOS_API_URL=http://127.0.0.1:3000
+NAME="mos-mcp-server"
+DAEMON="/usr/bin/node"
+DAEMON_ARGS="/opt/mos-mcp-server/src/index.js"
+PIDFILE="/var/run/${NAME}.pid"
+LOGFILE="/var/log/${NAME}.log"
 
-[Install]
-WantedBy=multi-user.target
+export NODE_ENV=production
+export MOS_API_URL=http://127.0.0.1:3000
+
+do_start() {
+    echo "Starting $NAME..."
+    if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+        echo "$NAME is already running"
+        return 1
+    fi
+    $DAEMON $DAEMON_ARGS >> "$LOGFILE" 2>&1 &
+    echo $! > "$PIDFILE"
+    echo "$NAME started"
+}
+
+do_stop() {
+    echo "Stopping $NAME..."
+    if [ ! -f "$PIDFILE" ]; then
+        echo "$NAME is not running"
+        return 1
+    fi
+    kill $(cat "$PIDFILE") 2>/dev/null
+    rm -f "$PIDFILE"
+    echo "$NAME stopped"
+}
+
+do_status() {
+    if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+        echo "$NAME is running (PID: $(cat $PIDFILE))"
+    else
+        echo "$NAME is not running"
+    fi
+}
+
+case "$1" in
+    start)   do_start ;;
+    stop)    do_stop ;;
+    restart) do_stop; do_start ;;
+    status)  do_status ;;
+    *)       echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
+esac
 EOF
 
-  # Reload systemd and enable service
-  systemctl daemon-reload
-  systemctl enable ${MCP_SERVICE}.service
-  systemctl start ${MCP_SERVICE}.service
+  chmod 755 "$INIT_SCRIPT"
+  
+  # Enable and start service
+  update-rc.d ${MCP_SERVICE} defaults 2>/dev/null || true
+  ${INIT_SCRIPT} start
   
   echo "MCP Server installed successfully"
 }
@@ -59,36 +105,40 @@ EOF
 uninstall() {
   echo "Uninstalling MCP Server..."
   
-  # Stop and disable service
-  systemctl stop ${MCP_SERVICE}.service 2>/dev/null || true
-  systemctl disable ${MCP_SERVICE}.service 2>/dev/null || true
+  # Stop service
+  ${INIT_SCRIPT} stop 2>/dev/null || true
   
-  # Remove systemd service file
-  rm -f /etc/systemd/system/${MCP_SERVICE}.service
-  systemctl daemon-reload
+  # Remove from runlevels
+  update-rc.d -f ${MCP_SERVICE} remove 2>/dev/null || true
+  
+  # Remove init script
+  rm -f "$INIT_SCRIPT"
   
   # Remove installation directory
   rm -rf "$MCP_INSTALL_DIR"
+  
+  # Remove pid and log files
+  rm -f "$PIDFILE" "$LOGFILE"
   
   echo "MCP Server uninstalled successfully"
 }
 
 # Start function
 start() {
-  systemctl start ${MCP_SERVICE}.service
+  ${INIT_SCRIPT} start
 }
 
 # Stop function
 stop() {
-  systemctl stop ${MCP_SERVICE}.service
+  ${INIT_SCRIPT} stop
 }
 
 # Restart function
 restart() {
-  systemctl restart ${MCP_SERVICE}.service
+  ${INIT_SCRIPT} restart
 }
 
 # Status function
 status() {
-  systemctl status ${MCP_SERVICE}.service
+  ${INIT_SCRIPT} status
 }
