@@ -60,8 +60,8 @@ jobs:
           cp staticfiles/package.json "${PKG_DIR}/opt/mos-mcp-server/"
           cp -r staticfiles/node_modules "${PKG_DIR}/opt/mos-mcp-server/" 2>/dev/null || true
           
-          # Create control file
-          cat > "${PKG_DIR}/DEBIAN/control" << EOF
+          # Create control file (no leading spaces!)
+          cat > "${PKG_DIR}/DEBIAN/control" <<EOF
           Package: ${PKG_NAME}
           Version: ${VERSION}
           Section: utils
@@ -74,8 +74,11 @@ jobs:
            Provides 70+ tools covering all MOS API functionality.
           EOF
           
+          # Remove leading spaces from control file
+          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/control"
+          
           # Create init.d script
-          cat > "${PKG_DIR}/etc/init.d/mos-mcp-server" << 'INITEOF'
+          cat > "${PKG_DIR}/etc/init.d/mos-mcp-server" <<'INITEOF'
           #!/bin/sh
           ### BEGIN INIT INFO
           # Provides:          mos-mcp-server
@@ -96,18 +99,19 @@ jobs:
           export NODE_ENV=production
           export MOS_API_URL=http://127.0.0.1:3000
           
-          start() {
+          do_start() {
               echo "Starting $NAME..."
               if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
                   echo "$NAME is already running"
                   return 1
               fi
+              cd /opt/mos-mcp-server
               $DAEMON $DAEMON_ARGS >> "$LOGFILE" 2>&1 &
               echo $! > "$PIDFILE"
               echo "$NAME started"
           }
           
-          stop() {
+          do_stop() {
               echo "Stopping $NAME..."
               if [ ! -f "$PIDFILE" ]; then
                   echo "$NAME is not running"
@@ -118,7 +122,7 @@ jobs:
               echo "$NAME stopped"
           }
           
-          status() {
+          do_status() {
               if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
                   echo "$NAME is running (PID: $(cat $PIDFILE))"
               else
@@ -127,32 +131,40 @@ jobs:
           }
           
           case "$1" in
-              start)   start ;;
-              stop)    stop ;;
-              restart) stop; start ;;
-              status)  status ;;
+              start)   do_start ;;
+              stop)    do_stop ;;
+              restart) do_stop; sleep 1; do_start ;;
+              status)  do_status ;;
               *)       echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
           esac
+          
+          exit 0
           INITEOF
           
+          # Remove leading spaces from init script
+          sed -i 's/^          //' "${PKG_DIR}/etc/init.d/mos-mcp-server"
           chmod 755 "${PKG_DIR}/etc/init.d/mos-mcp-server"
           
           # Create postinst script
-          cat > "${PKG_DIR}/DEBIAN/postinst" << 'EOF'
+          cat > "${PKG_DIR}/DEBIAN/postinst" <<'EOF'
           #!/bin/sh
           set -e
           update-rc.d mos-mcp-server defaults 2>/dev/null || true
           /etc/init.d/mos-mcp-server start 2>/dev/null || true
+          exit 0
           EOF
+          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/postinst"
           chmod 755 "${PKG_DIR}/DEBIAN/postinst"
           
           # Create prerm script
-          cat > "${PKG_DIR}/DEBIAN/prerm" << 'EOF'
+          cat > "${PKG_DIR}/DEBIAN/prerm" <<'EOF'
           #!/bin/sh
           set -e
           /etc/init.d/mos-mcp-server stop 2>/dev/null || true
           update-rc.d -f mos-mcp-server remove 2>/dev/null || true
+          exit 0
           EOF
+          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/prerm"
           chmod 755 "${PKG_DIR}/DEBIAN/prerm"
 
       - name: Build .deb package

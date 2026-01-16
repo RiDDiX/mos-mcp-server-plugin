@@ -59,6 +59,7 @@ do_start() {
         echo "$NAME is already running"
         return 1
     fi
+    cd /opt/mos-mcp-server
     $DAEMON $DAEMON_ARGS >> "$LOGFILE" 2>&1 &
     echo $! > "$PIDFILE"
     echo "$NAME started"
@@ -86,10 +87,12 @@ do_status() {
 case "$1" in
     start)   do_start ;;
     stop)    do_stop ;;
-    restart) do_stop; do_start ;;
+    restart) do_stop; sleep 1; do_start ;;
     status)  do_status ;;
     *)       echo "Usage: $0 {start|stop|restart|status}"; exit 1 ;;
 esac
+
+exit 0
 EOF
 
   chmod 755 "$INIT_SCRIPT"
