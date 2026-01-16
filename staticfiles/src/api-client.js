@@ -5,11 +5,13 @@ import axios from 'axios';
  */
 export class MosApiClient {
   constructor(config) {
-    this.baseUrl = config.baseUrl || '/api';
+    // On MOS server: http://127.0.0.1:3000
+    // External access: http://MOSIP/api/v1/
+    this.baseUrl = config.baseUrl || 'http://127.0.0.1:3000';
     this.token = config.token || null;
     
     this.client = axios.create({
-      baseURL: `${this.baseUrl}/v1`,
+      baseURL: `${this.baseUrl}/api/v1`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',

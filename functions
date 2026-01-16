@@ -41,7 +41,7 @@ ExecStart=/usr/bin/node /opt/mos-mcp-server/src/index.js
 Restart=on-failure
 RestartSec=5
 Environment=NODE_ENV=production
-Environment=MOS_API_URL=/api
+Environment=MOS_API_URL=http://127.0.0.1:3000
 
 [Install]
 WantedBy=multi-user.target
